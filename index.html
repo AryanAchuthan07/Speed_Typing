@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WPM Typewriter Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #020617;
+      padding: 2rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin: 1rem 0;
+      font-size: 1.1rem;
+    }
+
+    .text-box {
+      background: #020617;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 1rem;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      min-height: 120px;
+      margin-bottom: 1rem;
+      word-wrap: break-word;
+    }
+
+    .correct { color: #22c55e; }
+    .incorrect { color: #ef4444; }
+    .current { text-decoration: underline; }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: none;
+      background: #22c55e;
+      color: #020617;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Typewriter WPM Test</h1>
+    <div class="stats">
+      <div>Time: <span id="time">60</span>s</div>
+      <div>WPM: <span id="wpm">0</span></div>
+      <div>Accuracy: <span id="accuracy">100</span>%</div>
+    </div>
+
+    <div id="text" class="text-box"></div>
+    <input id="input" type="text" placeholder="Start typing to begin..." autofocus />
+    <button onclick="resetTest()">Restart Test</button>
+  </div>
+
+  <script>
+    const textDisplay = document.getElementById("text");
+    const input = document.getElementById("input");
+    const timeEl = document.getElementById("time");
+    const wpmEl = document.getElementById("wpm");
+    const accuracyEl = document.getElementById("accuracy");
+
+    const testText = "The quick brown fox jumps over the lazy dog while typing on a mechanical typewriter.";
+    let timeLeft = 60;
+    let timer = null;
+    let started = false;
+
+    function loadText() {
+      textDisplay.innerHTML = "";
+      testText.split("").forEach((char, index) => {
+        const span = document.createElement("span");
+        span.innerText = char;
+        if (index === 0) span.classList.add("current");
+        textDisplay.appendChild(span);
+      });
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.innerText = timeLeft;
+        updateStats();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          input.disabled = true;
+        }
+      }, 1000);
+    }
+
+    function updateStats() {
+      const typed = input.value.length;
+      const words = typed / 5;
+      const minutes = (60 - timeLeft) / 60;
+      const wpm = minutes > 0 ? Math.round(words / minutes) : 0;
+      wpmEl.innerText = wpm;
+
+      let correct = 0;
+      const spans = textDisplay.querySelectorAll("span");
+      spans.forEach((span, i) => {
+        if (input.value[i] === span.innerText) correct++;
+      });
+      const accuracy = typed > 0 ? Math.round((correct / typed) * 100) : 100;
+      accuracyEl.innerText = accuracy;
+    }
+
+    input.addEventListener("input", () => {
+      if (!started) {
+        started = true;
+        startTimer();
+      }
+
+      const spans = textDisplay.querySelectorAll("span");
+      const value = input.value.split("");
+
+      spans.forEach((span, index) => {
+        span.classList.remove("correct", "incorrect", "current");
+        if (value[index] == null) {
+          if (index === value.length) span.classList.add("current");
+        } else if (value[index] === span.innerText) {
+          span.classList.add("correct");
+        } else {
+          span.classList.add("incorrect");
+        }
+      });
+
+      updateStats();
+    });
+
+    function resetTest() {
+      clearInterval(timer);
+      timeLeft = 60;
+      started = false;
+      input.disabled = false;
+      input.value = "";
+      timeEl.innerText = 60;
+      wpmEl.innerText = 0;
+      accuracyEl.innerText = 100;
+      loadText();
+    }
+
+    loadText();
+  </script>
+</body>
+</html>
